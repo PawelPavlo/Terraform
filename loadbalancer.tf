@@ -3,7 +3,6 @@
 #    port_name   = "http"
 #    protocol    = "HTTP"
 #    timeout_sec = 10
-
 #    health_checks = [google_compute_http_health_check.autohealing.id]
 #  }
 #    backend {

@@ -1,8 +1,3 @@
-#Create ServiceAccount
-# resource "google_service_account" "service_account_bookshelf" {
-#   account_id   = "bookshelf"
-#   display_name = "Service Account"
-# }
 #Instance Template
 resource "google_compute_instance_template" "appserver_template" {
   name        = "appserver-template"
@@ -25,10 +20,22 @@ resource "google_compute_instance_template" "appserver_template" {
     access_config {
     }
   }
-  metadata_startup_script = file ("./startup-script.sh")
+  
+#metadata_startup_script = file ("./startup-script.sh")
+#echo "export DB_CONNECTION_STRING=${google_sql_database_instance.sql_bookshelf.connection_name}" >> /etc/environment && \
+  
+  metadata_startup_script = <<SCRIPT
+export DB_CONNECTION_STRING=${google_sql_database_instance.sql_bookshelf.connection_name} && \
+export HOME=/root && \
+apt-get update && apt-get install -yq ansible git && \
+git clone -b master https://github.com/PawelPavlo/Ansible.git /opt/ansible && \
+cd /opt/ansible/ansibleproject && ansible-playbook playbook.yml
+SCRIPT 
+
   service_account {
 #    Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     email  = "serviceterraform@bookshelf-project-319721.iam.gserviceaccount.com"
     scopes = ["cloud-platform"]
   }
+  depends_on = [google_sql_database_instance.sql_bookshelf, google_sql_database.database, google_storage_bucket.bookbuck_11222]
 }
